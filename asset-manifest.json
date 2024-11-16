@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/svg-to-png-converter/static/css/main.8e5adfbc.css",
+    "main.js": "/svg-to-png-converter/static/js/main.6670b83f.js",
+    "static/js/453.5179ab03.chunk.js": "/svg-to-png-converter/static/js/453.5179ab03.chunk.js",
+    "index.html": "/svg-to-png-converter/index.html",
+    "main.8e5adfbc.css.map": "/svg-to-png-converter/static/css/main.8e5adfbc.css.map",
+    "main.6670b83f.js.map": "/svg-to-png-converter/static/js/main.6670b83f.js.map",
+    "453.5179ab03.chunk.js.map": "/svg-to-png-converter/static/js/453.5179ab03.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.8e5adfbc.css",
+    "static/js/main.6670b83f.js"
+  ]
+}
