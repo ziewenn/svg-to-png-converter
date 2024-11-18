@@ -43,11 +43,11 @@ body {
   width: auto;
   height: auto;
   margin: 1rem 0;
-  border: 1px solid var(--border-color);
+  border: none;
   border-radius: 4px;
   object-fit: contain;
   background-color: var(--dark-bg);
-  padding: 10px;
+  padding: 0;
 }
 
 .preview-container {
@@ -55,6 +55,44 @@ body {
   justify-content: center;
   align-items: center;
   margin: 1rem 0;
+  padding: 20px;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+}
+
+.preview-wrapper {
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: var(--dark-bg);
+  margin: 1rem 0;
+}
+
+.preview-background {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  border-radius: 4px;
+  min-height: 200px;
+  transition: all 0.3s ease;
+  border: 1px solid var(--border-color);
+}
+
+.preview-background img {
+  max-width: 300px;
+  max-height: 300px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  background-color: transparent;
+}
+
+.preview-container img {
+  max-width: 300px;
+  max-height: 300px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
 }
 
 .convert-btn {
@@ -230,9 +268,14 @@ h4 {
   margin-top: 2rem;
   padding: 2rem;
   border-radius: 8px;
-  background-color: #1a1a1a;
-  min-height: 200px; /* Add minimum height for better appearance */
+  background-color: rgba(36, 36, 36, 0.98); /* More opaque background */
+  backdrop-filter: blur(10px); /* Increased blur */
+  min-height: 200px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); /* Enhanced shadow */
+  position: relative;
+  z-index: 1;
 }
+
 .dimensions-info {
   background-color: var(--dark-bg);
   padding: 1rem;
@@ -267,4 +310,145 @@ h4 {
   font-size: 1.1rem;
   font-weight: bold;
   margin: 0;
+}
+.background-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background-color: var(--darker-bg);
+}
+
+.App {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+.preview-options {
+  margin: 1rem 0;
+}
+
+.bg-options {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.bg-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--dark-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.bg-btn.active {
+  background: var(--primary-green);
+  border-color: var(--primary-green);
+}
+
+.bg-btn:hover {
+  background: var(--primary-green-hover);
+}
+
+.color-picker {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Quality Options */
+.quality-select {
+  padding: 0.5rem;
+  background: var(--dark-bg);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  margin-top: 0.5rem;
+}
+
+/* Progress Bar */
+.progress-container {
+  width: 100%;
+  height: 4px;
+  background: var(--dark-bg);
+  border-radius: 2px;
+  margin: 1rem 0;
+  position: relative;
+}
+
+.progress-bar {
+  height: 100%;
+  background: var(--primary-green);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* Conversion History */
+.conversion-history {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.history-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.history-item {
+  background: var(--dark-bg);
+  padding: 0.5rem;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.history-item img {
+  width: 100%;
+  height: auto;
+  border-radius: 2px;
+}
+
+/* File Size Info */
+.file-size-info {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin: 1rem 0;
+  padding: 1rem;
+  background: var(--dark-bg);
+  border-radius: 4px;
+}
+
+.size-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.size-item span {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.size-item strong {
+  color: var(--text-primary);
+  font-size: 1.1rem;
 }

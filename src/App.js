@@ -1,5 +1,11 @@
 import React, { useState, useRef } from "react";
 import "./App.css";
+import DotBackground from "./components/DotBackground";
+import PreviewOptions from "./components/PreviewOptions";
+import FileSizeInfo from "./components/FileSizeInfo";
+import QualityOptions from "./components/QualityOptions";
+import ProgressBar from "./components/ProgressBar";
+import ConversionHistory from "./components/ConversionHistory";
 
 function App() {
   const [svgFile, setSvgFile] = useState(null);
@@ -10,6 +16,21 @@ function App() {
   const canvasRef = useRef(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [previewBg, setPreviewBg] = useState("transparent");
+  const [quality, setQuality] = useState("best");
+  const [progress, setProgress] = useState(0);
+  const [recentFiles, setRecentFiles] = useState([]);
+  const [convertedSize, setConvertedSize] = useState(0);
+  const [originalSize, setOriginalSize] = useState(0);
+
+  const handleDownloadAgain = (file) => {
+    const link = document.createElement("a");
+    link.href = file.url;
+    link.download = file.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -63,6 +84,7 @@ function App() {
   const convertToPng = () => {
     if (!svgFile) return;
 
+    setProgress(10); // Start progress
     const canvas = canvasRef.current;
     const img = new Image();
 
@@ -71,29 +93,30 @@ function App() {
         // Calculate target dimensions
         const targetWidth = img.width * scale;
         const targetHeight = img.height * scale;
+        setProgress(30);
 
-        // Check if dimensions exceed browser limits (most browsers have a max of 32767 pixels)
+        // Check dimensions
         const MAX_DIMENSION = 32767;
         if (targetWidth > MAX_DIMENSION || targetHeight > MAX_DIMENSION) {
           const maxScale = Math.floor(
             Math.min(MAX_DIMENSION / img.width, MAX_DIMENSION / img.height)
           );
           alert(
-            `Scale ${scale}x is too large for this image.\nMaximum safe scale is ${maxScale}x.\nPlease try a smaller scale or reduce the original SVG size.`
+            `Scale ${scale}x is too large.\nMaximum safe scale is ${maxScale}x`
           );
+          setProgress(0);
           return;
         }
 
         // Set canvas dimensions
         canvas.width = targetWidth;
         canvas.height = targetHeight;
-
         const ctx = canvas.getContext("2d", { willReadFrequently: true });
-
-        // Clear previous content
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Draw at scaled size directly instead of using ctx.scale
+        setProgress(50);
+
+        // Draw image
         ctx.drawImage(
           img,
           0,
@@ -105,34 +128,55 @@ function App() {
           targetWidth,
           targetHeight
         );
+        setProgress(70);
 
-        // Convert to PNG and download
-        try {
-          const pngUrl = canvas.toDataURL("image/png");
-          const downloadLink = document.createElement("a");
-          downloadLink.href = pngUrl;
-          downloadLink.download = svgFile.name.replace(
-            ".svg",
-            `@${scale}x.png`
-          );
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          document.body.removeChild(downloadLink);
-        } catch (e) {
-          console.error("Download error:", e);
-          alert("Error creating download. Please try a smaller scale.");
-        }
+        // Convert to PNG
+        const pngUrl = canvas.toDataURL("image/png");
+
+        // Calculate converted size (approximate)
+        const convertedSizeInBytes = Math.round(((pngUrl.length - 22) * 3) / 4);
+        setConvertedSize(convertedSizeInBytes);
+
+        // Create history entry
+        const newFile = {
+          name: svgFile.name.replace(".svg", `@${scale}x.png`),
+          url: pngUrl,
+          thumbnail: preview,
+          date: new Date().toISOString(),
+          size: convertedSizeInBytes,
+        };
+
+        // Update history (keep last 5 conversions)
+        setRecentFiles((prev) => [newFile, ...prev].slice(0, 5));
+
+        setProgress(90);
+
+        // Download file
+        const link = document.createElement("a");
+        link.href = pngUrl;
+        link.download = newFile.name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        setProgress(100);
+
+        // Reset progress after a delay
+        setTimeout(() => setProgress(0), 1000);
       } catch (error) {
         console.error("Conversion error:", error);
-        alert(
-          `Error during conversion. Please try a smaller scale or reduce the original SVG size.`
-        );
+        setProgress(0);
+        alert("Error during conversion. Please try again.");
       }
     };
 
     img.onerror = () => {
+      setProgress(0);
       alert("Error loading the SVG image. Please check if the file is valid.");
     };
+
+    // Set original file size
+    setOriginalSize(svgFile.size);
 
     img.src = preview;
   };
@@ -208,6 +252,7 @@ function App() {
   return (
     <div className="App">
       <h1>SVG to PNG Converter</h1>
+      <DotBackground />
 
       <div className="converter">
         <div
@@ -235,14 +280,43 @@ function App() {
         {preview && (
           <div className="preview">
             <h3>Preview:</h3>
-            <div className="preview-container">
-              <img src={preview} alt="SVG preview" />
+            <PreviewOptions
+              background={previewBg}
+              setBackground={setPreviewBg}
+            />
+            <div className="preview-wrapper">
+              <div
+                className="preview-background"
+                style={{
+                  backgroundColor:
+                    previewBg === "transparent" ? "var(--dark-bg)" : previewBg,
+                }}
+              >
+                <img
+                  src={preview}
+                  alt="SVG preview"
+                  style={{
+                    backgroundColor: "transparent",
+                    border: "none",
+                    padding: 0,
+                    margin: 0,
+                  }}
+                />
+              </div>
             </div>
+
             {getDimensionsInfo()}
+
+            <FileSizeInfo
+              originalSize={originalSize}
+              convertedSize={convertedSize}
+            />
+
+            <QualityOptions quality={quality} setQuality={setQuality} />
 
             <div className="scale-options">
               <h4>Select Scale:</h4>
-              {[1, 2, 4, 8, 16, 32].map((scaleOption) => (
+              {[1, 2, 4, 8, 16].map((scaleOption) => (
                 <button
                   key={scaleOption}
                   onClick={() => handleScaleClick(scaleOption)}
@@ -260,6 +334,7 @@ function App() {
                 Custom
               </button>
             </div>
+
             {showCustomScale && (
               <form
                 onSubmit={handleCustomScaleSubmit}
@@ -278,13 +353,20 @@ function App() {
                 </button>
               </form>
             )}
+
             <div className="convert-section">
+              {progress > 0 && <ProgressBar progress={progress} />}
               <button onClick={convertToPng} className="convert-btn">
                 Convert to PNG ({scale}x)
               </button>
             </div>
           </div>
         )}
+
+        <ConversionHistory
+          recentFiles={recentFiles}
+          downloadAgain={handleDownloadAgain}
+        />
 
         <canvas ref={canvasRef} style={{ display: "none" }} />
       </div>
