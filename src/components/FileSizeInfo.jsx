@@ -1,7 +1,7 @@
 import React from "react";
 
 const FileSizeInfo = ({ originalSize, convertedSize }) => {
-  const formatFileSize = (bytes) => {
+  const formatSize = (bytes) => {
     if (bytes === 0) return "0 Bytes";
     const k = 1024;
     const sizes = ["Bytes", "KB", "MB", "GB"];
@@ -12,13 +12,15 @@ const FileSizeInfo = ({ originalSize, convertedSize }) => {
   return (
     <div className="file-size-info">
       <div className="size-item">
-        <span>Original:</span>
-        <strong>{formatFileSize(originalSize)}</strong>
+        <span>Original Size:</span>
+        <strong>{formatSize(originalSize)}</strong>
       </div>
-      <div className="size-item">
-        <span>Converted:</span>
-        <strong>{formatFileSize(convertedSize)}</strong>
-      </div>
+      {convertedSize > 0 && (
+        <div className="size-item">
+          <span>Converted Size:</span>
+          <strong>{formatSize(convertedSize)}</strong>
+        </div>
+      )}
     </div>
   );
 };

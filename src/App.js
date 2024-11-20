@@ -6,6 +6,7 @@ import FileSizeInfo from "./components/FileSizeInfo";
 import QualityOptions from "./components/QualityOptions";
 import ProgressBar from "./components/ProgressBar";
 import ConversionHistory from "./components/ConversionHistory";
+import FormatOptions from "./components/FormatOptions";
 
 function App() {
   const [svgFile, setSvgFile] = useState(null);
@@ -23,6 +24,116 @@ function App() {
   const [convertedSize, setConvertedSize] = useState(0);
   const [originalSize, setOriginalSize] = useState(0);
   const [customDpi, setCustomDpi] = useState(300);
+  const [format, setFormat] = useState("png");
+
+  const createICO = async (canvas, sizes = [16, 32, 48]) => {
+    try {
+      // Function to create a high-quality scaled version
+      const createScaledCanvas = (size) => {
+        const tempCanvas = document.createElement("canvas");
+        tempCanvas.width = size;
+        tempCanvas.height = size;
+        const ctx = tempCanvas.getContext("2d");
+
+        // Enable image smoothing
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+
+        // Fill with transparent background
+        ctx.clearRect(0, 0, size, size);
+
+        // Calculate scaling to maintain aspect ratio
+        const scale = Math.min(size / canvas.width, size / canvas.height);
+
+        // Calculate centered position
+        const x = (size - canvas.width * scale) / 2;
+        const y = (size - canvas.height * scale) / 2;
+
+        // Draw scaled image
+        ctx.drawImage(
+          canvas,
+          x,
+          y,
+          canvas.width * scale,
+          canvas.height * scale
+        );
+
+        return tempCanvas;
+      };
+
+      // Create PNG blobs for each size
+      const images = await Promise.all(
+        sizes.map(async (size) => {
+          const scaledCanvas = createScaledCanvas(size);
+
+          return new Promise((resolve) => {
+            scaledCanvas.toBlob(
+              (blob) => {
+                blob.arrayBuffer().then((buffer) => {
+                  resolve({
+                    size,
+                    buffer,
+                    length: buffer.byteLength,
+                  });
+                });
+              },
+              "image/png",
+              1.0
+            ); // Use maximum PNG quality
+          });
+        })
+      );
+
+      // Calculate total size and offsets
+      let offset = 6 + sizes.length * 16; // Header + Directory size
+      const directory = [];
+
+      for (const image of images) {
+        directory.push({
+          width: image.size,
+          height: image.size,
+          offset,
+          size: image.length,
+        });
+        offset += image.length;
+      }
+
+      // Create final buffer
+      const buffer = new ArrayBuffer(offset);
+      const view = new DataView(buffer);
+
+      // Write ICO header
+      view.setUint16(0, 0, true); // Reserved
+      view.setUint16(2, 1, true); // ICO type
+      view.setUint16(4, sizes.length, true); // Number of images
+
+      // Write directory entries
+      let directoryOffset = 6;
+      for (const entry of directory) {
+        view.setUint8(directoryOffset, entry.width); // Width
+        view.setUint8(directoryOffset + 1, entry.height); // Height
+        view.setUint8(directoryOffset + 2, 0); // Color palette
+        view.setUint8(directoryOffset + 3, 0); // Reserved
+        view.setUint16(directoryOffset + 4, 1, true); // Color planes
+        view.setUint16(directoryOffset + 6, 32, true); // Bits per pixel
+        view.setUint32(directoryOffset + 8, entry.size, true); // Image size
+        view.setUint32(directoryOffset + 12, entry.offset, true); // Image offset
+        directoryOffset += 16;
+      }
+
+      // Write image data
+      let dataOffset = 6 + sizes.length * 16;
+      for (const image of images) {
+        new Uint8Array(buffer).set(new Uint8Array(image.buffer), dataOffset);
+        dataOffset += image.length;
+      }
+
+      return buffer;
+    } catch (error) {
+      console.error("Error creating ICO:", error);
+      throw error;
+    }
+  };
 
   const handleDownloadAgain = (file) => {
     const link = document.createElement("a");
@@ -71,6 +182,7 @@ function App() {
       tempImg.src = result;
     };
     reader.readAsDataURL(file);
+    setOriginalSize(file.size);
   };
 
   const handleFileChange = (e) => {
@@ -82,98 +194,135 @@ function App() {
     }
   };
 
-  const convertToPng = () => {
+  const convertImage = async () => {
     if (!svgFile) return;
 
     setProgress(10);
     const canvas = canvasRef.current;
     const img = new Image();
 
-    img.onload = () => {
+    img.onload = async () => {
       try {
         const dpi =
           quality === "best" ? 300 : quality === "optimized" ? 150 : customDpi;
 
-        const dpiScale = dpi / 96; // 96 is the default screen DPI
+        const dpiScale = dpi / 96;
         const finalScale = scale * dpiScale;
 
-        // Calculate target dimensions
         const targetWidth = img.width * finalScale;
         const targetHeight = img.height * finalScale;
-        setProgress(30);
 
-        // Check dimensions
-        const MAX_DIMENSION = 32767;
-        if (targetWidth > MAX_DIMENSION || targetHeight > MAX_DIMENSION) {
-          const maxScale = Math.floor(
-            Math.min(MAX_DIMENSION / img.width, MAX_DIMENSION / img.height)
-          );
-          alert(
-            `Scale ${scale}x is too large.\nMaximum safe scale is ${maxScale}x`
-          );
-          setProgress(0);
-          return;
-        }
-
-        // Set canvas dimensions
         canvas.width = targetWidth;
         canvas.height = targetHeight;
-        const ctx = canvas.getContext("2d", { willReadFrequently: true });
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const ctx = canvas.getContext("2d");
+
+        // Enable high-quality scaling
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+
+        // Clear background
+        ctx.fillStyle = previewBg === "transparent" ? "transparent" : previewBg;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw image
+        ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
 
         setProgress(50);
 
-        // Draw image
-        ctx.drawImage(
-          img,
-          0,
-          0,
-          img.width,
-          img.height,
-          0,
-          0,
-          targetWidth,
-          targetHeight
-        );
-        setProgress(70);
+        let blob;
+        let fileExtension;
+        let mimeType;
 
-        // Convert to PNG
-        const pngUrl = canvas.toDataURL("image/png");
+        switch (format) {
+          case "webp":
+            blob = await new Promise((resolve) => {
+              canvas.toBlob(resolve, "image/webp", 0.9);
+            });
+            fileExtension = "webp";
+            mimeType = "image/webp";
+            break;
 
-        // Calculate converted size (approximate)
-        const convertedSizeInBytes = Math.round(((pngUrl.length - 22) * 3) / 4);
-        setConvertedSize(convertedSizeInBytes);
+          case "ico":
+            // Enhanced ICO sizes for better quality across different use cases
+            const sizes = [16, 32, 48, 64, 128];
 
-        // Create history entry
-        const newFile = {
-          name: svgFile.name.replace(".svg", `@${scale}x.png`),
-          url: pngUrl,
-          thumbnail: preview,
-          date: new Date().toISOString(),
-          size: convertedSizeInBytes,
-        };
+            // Create a temporary canvas for better downscaling
+            const tempCanvas = document.createElement("canvas");
+            const tempCtx = tempCanvas.getContext("2d");
+            tempCanvas.width = Math.max(...sizes);
+            tempCanvas.height = Math.max(...sizes);
 
-        // Update history (keep last 5 conversions)
-        setRecentFiles((prev) => [newFile, ...prev].slice(0, 5));
+            // Draw original image maintaining aspect ratio
+            const aspectRatio = canvas.width / canvas.height;
+            let drawWidth, drawHeight, offsetX, offsetY;
 
-        setProgress(90);
+            if (aspectRatio > 1) {
+              drawWidth = tempCanvas.width;
+              drawHeight = tempCanvas.width / aspectRatio;
+              offsetX = 0;
+              offsetY = (tempCanvas.height - drawHeight) / 2;
+            } else {
+              drawHeight = tempCanvas.height;
+              drawWidth = tempCanvas.height * aspectRatio;
+              offsetX = (tempCanvas.width - drawWidth) / 2;
+              offsetY = 0;
+            }
 
-        // Download file
+            // Draw with high quality settings
+            tempCtx.imageSmoothingEnabled = true;
+            tempCtx.imageSmoothingQuality = "high";
+            tempCtx.drawImage(canvas, offsetX, offsetY, drawWidth, drawHeight);
+
+            const icoData = await createICO(tempCanvas, sizes);
+            blob = new Blob([icoData], { type: "image/x-icon" });
+            fileExtension = "ico";
+            mimeType = "image/x-icon";
+            break;
+
+          default: // PNG
+            blob = await new Promise((resolve) => {
+              canvas.toBlob(resolve, "image/png", 1.0); // Maximum quality for PNG
+            });
+            fileExtension = "png";
+            mimeType = "image/png";
+        }
+
+        setProgress(80);
+
+        const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
-        link.href = pngUrl;
-        link.download = newFile.name;
+        const fileName = svgFile.name.replace(/\.svg$/, `.${fileExtension}`);
+        link.href = url;
+        link.download = fileName;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
 
-        setProgress(100);
+        // Clean up previous file URL if it exists
+        const newFile = {
+          name: fileName,
+          url,
+          size: blob.size,
+          date: new Date().toISOString(),
+          type: mimeType,
+        };
 
-        // Reset progress after a delay
-        setTimeout(() => setProgress(0), 1000);
+        setRecentFiles((prev) => {
+          // Clean up old URLs
+          prev.forEach((file) => URL.revokeObjectURL(file.url));
+          return [newFile, ...prev].slice(0, 10);
+        });
+
+        setProgress(100);
+        setConvertedSize(blob.size);
+
+        setTimeout(() => {
+          setProgress(0);
+        }, 1000);
       } catch (error) {
         console.error("Conversion error:", error);
         setProgress(0);
-        alert("Error during conversion. Please try again.");
+        alert("Error converting the image. Please try again.");
       }
     };
 
@@ -182,25 +331,18 @@ function App() {
       alert("Error loading the SVG image. Please check if the file is valid.");
     };
 
-    // Set original file size
-    setOriginalSize(svgFile.size);
-
     img.src = preview;
   };
 
   const getMaxSafeScale = () => {
-    if (!dimensions.width || !dimensions.height) return Infinity;
-
-    const MAX_DIMENSION = 32767;
-    return Math.floor(
-      Math.min(
-        MAX_DIMENSION / dimensions.width,
-        MAX_DIMENSION / dimensions.height
-      )
+    const maxSize = 16384; // Maximum safe canvas size
+    const maxScale = Math.min(
+      maxSize / dimensions.width,
+      maxSize / dimensions.height
     );
+    return Math.floor(maxScale * 10) / 10;
   };
 
-  // Update the scale setting functions
   const handleScaleClick = (newScale) => {
     const maxSafeScale = getMaxSafeScale();
     if (newScale > maxSafeScale) {
@@ -319,6 +461,8 @@ function App() {
               convertedSize={convertedSize}
             />
 
+            <FormatOptions format={format} setFormat={setFormat} />
+
             <QualityOptions
               quality={quality}
               setQuality={setQuality}
@@ -368,8 +512,12 @@ function App() {
 
             <div className="convert-section">
               {progress > 0 && <ProgressBar progress={progress} />}
-              <button onClick={convertToPng} className="convert-btn">
-                Convert to PNG ({scale}x)
+              <button
+                onClick={convertImage}
+                className="convert-btn"
+                data-format={format.toUpperCase()}
+              >
+                Convert to {format.toUpperCase()} ({scale}x)
               </button>
             </div>
           </div>
@@ -385,4 +533,5 @@ function App() {
     </div>
   );
 }
+
 export default App;

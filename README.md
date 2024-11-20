@@ -1,26 +1,43 @@
-# SVG to PNG Converter
+# SVG to PNG/ICO/WebP Converter
 
-A web application that converts SVG files to PNG with customizable scaling options.
+A modern, browser-based tool for converting SVG files to PNG, ICO, and WebP formats with advanced quality controls and batch processing capabilities.
 
 ## Features
 
-- Drag and drop SVG file upload
-- Preview SVG before conversion
-- Multiple scale options (1x to 32x)
-- Custom scale input
-- Maximum safe scale calculation
-- Dark theme UI
-- Responsive design
+- 🖼️ Convert SVG to multiple formats:
 
-## Technologies Used
+  - PNG (High quality)
+  - ICO (Multiple sizes: 16x16, 32x32, 48x48, 64x64, 128x128)
+  - WebP (Optimized compression)
 
-- React
-- HTML Canvas
-- CSS
-- File API
+- 🎨 Advanced Options:
 
-## Usage
+  - Custom scaling (1x to 16x)
+  - Quality presets (Best, Optimized, Custom)
+  - Custom DPI settings
+  - Background color options (Transparent, White, Black, Custom)
 
-1. Drag and drop or select an SVG file
-2. Choose a scale factor
-3. Click "Convert to PNG" to download the converted
+- 💫 Real-time Preview:
+
+  - Live preview of conversion
+  - Background toggle for transparency check
+  - Actual size display
+
+- 📊 File Information:
+
+  - Original file size
+  - Converted file size
+  - Image dimensions
+  - DPI information
+
+- 📜 Conversion History:
+
+  - Recent conversions list
+  - Quick re-download option
+  - Preview thumbnails
+
+- 🎯 User Experience:
+  - Drag and drop support
+  - Progress indicator
+  - Error handling
+  - Responsive design
