@@ -22,6 +22,7 @@ function App() {
   const [recentFiles, setRecentFiles] = useState([]);
   const [convertedSize, setConvertedSize] = useState(0);
   const [originalSize, setOriginalSize] = useState(0);
+  const [customDpi, setCustomDpi] = useState(300);
 
   const handleDownloadAgain = (file) => {
     const link = document.createElement("a");
@@ -84,15 +85,21 @@ function App() {
   const convertToPng = () => {
     if (!svgFile) return;
 
-    setProgress(10); // Start progress
+    setProgress(10);
     const canvas = canvasRef.current;
     const img = new Image();
 
     img.onload = () => {
       try {
+        const dpi =
+          quality === "best" ? 300 : quality === "optimized" ? 150 : customDpi;
+
+        const dpiScale = dpi / 96; // 96 is the default screen DPI
+        const finalScale = scale * dpiScale;
+
         // Calculate target dimensions
-        const targetWidth = img.width * scale;
-        const targetHeight = img.height * scale;
+        const targetWidth = img.width * finalScale;
+        const targetHeight = img.height * finalScale;
         setProgress(30);
 
         // Check dimensions
@@ -312,7 +319,12 @@ function App() {
               convertedSize={convertedSize}
             />
 
-            <QualityOptions quality={quality} setQuality={setQuality} />
+            <QualityOptions
+              quality={quality}
+              setQuality={setQuality}
+              customDpi={customDpi}
+              setCustomDpi={setCustomDpi}
+            />
 
             <div className="scale-options">
               <h4>Select Scale:</h4>

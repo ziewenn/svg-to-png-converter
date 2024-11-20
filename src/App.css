@@ -46,7 +46,7 @@ body {
   border: none;
   border-radius: 4px;
   object-fit: contain;
-  background-color: var(--dark-bg);
+  background-color: transparent;
   padding: 0;
 }
 
@@ -451,4 +451,40 @@ h4 {
 .size-item strong {
   color: var(--text-primary);
   font-size: 1.1rem;
+}
+
+.quality-options {
+  margin: 1rem 0;
+}
+
+.quality-select {
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--dark-bg);
+  color: var(--text-primary);
+  width: 200px;
+  margin-top: 0.5rem;
+}
+
+.custom-dpi-container {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.custom-dpi-input {
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--dark-bg);
+  color: var(--text-primary);
+  width: 120px;
+  text-align: center;
+}
+
+.dpi-label {
+  color: var(--text-secondary);
 }
