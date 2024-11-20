@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/svg-to-png-converter/static/css/main.485459b7.css",
-    "main.js": "/svg-to-png-converter/static/js/main.041e01c2.js",
+    "main.css": "/svg-to-png-converter/static/css/main.6abd5101.css",
+    "main.js": "/svg-to-png-converter/static/js/main.fd7b9baa.js",
     "static/js/453.5179ab03.chunk.js": "/svg-to-png-converter/static/js/453.5179ab03.chunk.js",
     "index.html": "/svg-to-png-converter/index.html",
-    "main.485459b7.css.map": "/svg-to-png-converter/static/css/main.485459b7.css.map",
-    "main.041e01c2.js.map": "/svg-to-png-converter/static/js/main.041e01c2.js.map",
+    "main.6abd5101.css.map": "/svg-to-png-converter/static/css/main.6abd5101.css.map",
+    "main.fd7b9baa.js.map": "/svg-to-png-converter/static/js/main.fd7b9baa.js.map",
     "453.5179ab03.chunk.js.map": "/svg-to-png-converter/static/js/453.5179ab03.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.485459b7.css",
-    "static/js/main.041e01c2.js"
+    "static/css/main.6abd5101.css",
+    "static/js/main.fd7b9baa.js"
   ]
 }
