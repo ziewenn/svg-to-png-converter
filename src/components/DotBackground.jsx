@@ -3,10 +3,9 @@ import React, { useEffect, useRef, useState } from "react";
 const DotBackground = () => {
   const canvasRef = useRef(null);
   const mouseRef = useRef({ x: 0, y: 0 });
-  const [dots, setDots] = useState([]);
+  const dotsRef = useRef([]);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 
-  // Handle canvas resize and create dot grid
   useEffect(() => {
     const handleResize = () => {
       const width = window.innerWidth;
@@ -14,17 +13,24 @@ const DotBackground = () => {
 
       setCanvasSize({ width, height });
 
-      // Create denser grid of dots
-      const spacing = 25; // Reduced spacing for more dots
+      const spacing = 25; // Spacing between dots
       const newDots = [];
 
       for (let x = 0; x < width; x += spacing) {
         for (let y = 0; y < height; y += spacing) {
-          newDots.push({ x, y, baseSize: 2 }); // Smaller base size
+          newDots.push({
+            x,
+            y,
+            baseSize: 2,
+            currentSize: 2,
+            targetSize: 2,
+            currentOpacity: 0,
+            targetOpacity: 0,
+          });
         }
       }
 
-      setDots(newDots);
+      dotsRef.current = newDots;
     };
 
     handleResize();
@@ -32,10 +38,9 @@ const DotBackground = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Draw on canvas
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || dots.length === 0) return;
+    if (!canvas || dotsRef.current.length === 0) return;
 
     const ctx = canvas.getContext("2d");
     let animationFrameId;
@@ -46,7 +51,7 @@ const DotBackground = () => {
       const centerBox = document.querySelector(".converter");
       const boxRect = centerBox?.getBoundingClientRect();
 
-      dots.forEach((dot) => {
+      dotsRef.current.forEach((dot) => {
         if (boxRect) {
           const isInBox =
             dot.x >= boxRect.left &&
@@ -61,24 +66,29 @@ const DotBackground = () => {
           dot.x - mouseRef.current.x,
           dot.y - mouseRef.current.y
         );
-        const maxDistance = 100; // Reduced radius around mouse
+        const maxDistance = 100; // Reduced from 150 to 100 for smaller radius
 
+        // Calculate target values with increased size for closer dots
         if (distance < maxDistance) {
-          // Calculate size and opacity based on distance
-          const size = dot.baseSize * (1 + (1 - distance / maxDistance));
-          const opacity = 1 * (1 - distance / maxDistance);
-
-          ctx.beginPath();
-          ctx.arc(dot.x, dot.y, size, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba( 	29.8, 68.6, 31.4, ${opacity})`;
-          ctx.fill();
+          const distanceFactor = 1 - distance / maxDistance;
+          // Increased size multiplier for dots closer to mouse
+          dot.targetSize = dot.baseSize * (1 + distanceFactor * 5);
+          dot.targetOpacity = distanceFactor * 0.8; // Slightly reduced max opacity
         } else {
-          // Make dots completely invisible when mouse is far
-          ctx.beginPath();
-          ctx.arc(dot.x, dot.y, dot.baseSize, 0, Math.PI * 2);
-          ctx.fillStyle = "rgba(255, 255, 255, 0)";
-          ctx.fill();
+          dot.targetSize = dot.baseSize;
+          dot.targetOpacity = 0;
         }
+
+        // Smoother animation with adjusted easing
+        const easing = 0.08; // Slightly reduced for smoother transitions
+        dot.currentSize += (dot.targetSize - dot.currentSize) * easing;
+        dot.currentOpacity += (dot.targetOpacity - dot.currentOpacity) * easing;
+
+        // Draw dot
+        ctx.beginPath();
+        ctx.arc(dot.x, dot.y, dot.currentSize, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(76, 175, 80, ${dot.currentOpacity})`;
+        ctx.fill();
       });
 
       animationFrameId = requestAnimationFrame(draw);
@@ -101,7 +111,7 @@ const DotBackground = () => {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener("mousemove", handleMouseMove);
     };
-  }, [dots, canvasSize]);
+  }, [canvasSize]);
 
   return (
     <canvas

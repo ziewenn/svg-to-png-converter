@@ -576,3 +576,62 @@ h4 {
   height: 6px;
   border-radius: 3px;
 }
+.github-link {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.github-link a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  text-decoration: none;
+  font-size: 14px;
+  background: rgba(45, 45, 45, 0.9);
+  padding: 8px 16px;
+  border-radius: 50px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.github-link a:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.project-logo {
+  width: 24px;
+  height: 24px;
+}
+
+.github-icon {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+
+@media (max-width: 768px) {
+  .github-link {
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .github-link a {
+    padding: 6px 12px;
+  }
+
+  .project-logo {
+    width: 20px;
+    height: 20px;
+  }
+
+  .github-icon {
+    width: 16px;
+    height: 16px;
+  }
+}
